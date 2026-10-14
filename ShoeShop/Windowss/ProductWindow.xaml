@@ -1,0 +1,62 @@
+﻿<Window x:Class="ShoeShop.Windowss.ProductWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ShoeShop.Windowss"
+        mc:Ignorable="d"
+        Title="Просмотр товара - ОБУВАШКА" Height="500" Width="600" WindowStartupLocation="CenterScreen">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Информация о товаре -->
+        <StackPanel Grid.Row="0">
+            <TextBlock x:Name="TitleText" FontSize="22" FontWeight="Bold" Margin="0,0,0,10"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image x:Name="ProductImage" Width="180" Height="180" Stretch="Uniform" 
+                       HorizontalAlignment="Left"/>
+                <StackPanel Grid.Column="1" Margin="20,0,0,0">
+                    <TextBlock x:Name="ManufacturerText" FontSize="16" Margin="0,5"/>
+                    <TextBlock x:Name="CategoryText" FontSize="16" Margin="0,5"/>
+                    <TextBlock x:Name="PriceText" FontSize="20" FontWeight="Bold" 
+                               Foreground="Green" Margin="0,10"/>
+                    <TextBlock Text="Состав:" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                    <TextBlock x:Name="CompositionText" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="Описание:" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                    <TextBlock x:Name="DescriptionText" FontSize="14" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <!-- Оформление заказа -->
+        <GroupBox Grid.Row="1" Header="Оформление заказа" Margin="0,20,0,0" Padding="10">
+            <StackPanel>
+                <TextBlock Text="Выберите размер:" Margin="0,0,0,5"/>
+                <ComboBox x:Name="SizeComboBox" DisplayMemberPath="DisplaySize" 
+                          Margin="0,0,0,15"/>
+
+                <TextBlock Text="Количество:" Margin="0,0,0,5"/>
+                <TextBox x:Name="QuantityTextBox" Width="100" HorizontalAlignment="Left"
+                         PreviewTextInput="QuantityTextBox_PreviewTextInput" 
+                         DataObject.Pasting="QuantityTextBox_Pasting"/>
+                <TextBlock x:Name="QuantityErrorText" Foreground="Red" FontSize="12" 
+                           Visibility="Collapsed" Margin="0,5,0,0"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Отмена" Width="100" Margin="0,0,10,0" Click="CancelButton_Click"/>
+            <Button Content="Оформить заказ" Width="150" Background="#4CAF50" Foreground="White" 
+                    FontWeight="Bold" Click="OrderButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

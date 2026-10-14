@@ -1,14 +1,10 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
 
 namespace ShoeShop
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
+        public int? CurrentUserId { get; set; }
+        public string CurrentUserFullName { get; set; }
     }
-
 }
