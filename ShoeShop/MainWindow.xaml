@@ -9,14 +9,10 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Шапка с логотипом и ФИО -->
             <RowDefinition Height="Auto"/>
-            <!-- Панель фильтрации и поиска -->
             <RowDefinition Height="*"/>
-            <!-- Список товаров -->
         </Grid.RowDefinitions>
 
-        <!-- Шапка -->
         <Grid Grid.Row="0" Background="#F0F0F0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -27,68 +23,42 @@
                 <Image Source="/Resources/Чудо Обувь.png" Width="50" Height="50" Margin="0,0,15,0"/>
                 <TextBlock Text="Каталог обуви" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
             </StackPanel>
-            <TextBlock x:Name="UserFullNameText" Grid.Column="2" FontSize="16" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Margin="0,0,20,0" Foreground="#333333"/>
+            <TextBlock x:Name="UserNameText" Grid.Column="2" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0"/>
         </Grid>
 
-        <!-- Панель поиска, фильтрации, сортировки -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10" Background="#E8E8E8">
             <TextBlock Text="Поиск:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <TextBox x:Name="SearchTextBox" Width="200" Margin="0,0,15,0" 
-                     TextChanged="SearchTextBox_TextChanged"/>
-
+            <TextBox x:Name="SearchTextBox" Width="200" Margin="0,0,15,0" TextChanged="FilterAndSort"/>
             <TextBlock Text="Категория:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <ComboBox x:Name="CategoryFilterComboBox" Width="180" Margin="0,0,15,0" 
-                      SelectionChanged="CategoryFilterComboBox_SelectionChanged"/>
-
+            <ComboBox x:Name="CategoryFilter" Width="180" Margin="0,0,15,0" SelectionChanged="FilterAndSort"/>
             <TextBlock Text="Сортировка:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <ComboBox x:Name="SortComboBox" Width="180" 
-                      SelectionChanged="SortComboBox_SelectionChanged">
+            <ComboBox x:Name="SortFilter" Width="180" SelectionChanged="FilterAndSort">
                 <ComboBoxItem Content="По умолчанию"/>
                 <ComboBoxItem Content="По цене (возрастание)"/>
                 <ComboBoxItem Content="По цене (убывание)"/>
             </ComboBox>
         </StackPanel>
 
-
-        <!-- Список товаров -->
-        <ListBox Grid.Row="2" x:Name="ShoeCatalogList" HorizontalContentAlignment="Stretch"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 MouseDoubleClick="ShoeCatalogList_MouseDoubleClick">
+        <ListBox Grid.Row="2" x:Name="ShoeList" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="ShoeList_MouseDoubleClick">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{Binding BackgroundColor}" BorderBrush="LightGray" 
-                            BorderThickness="1" Margin="5" Padding="10">
+                    <Border Background="{Binding BackgroundColor}" BorderBrush="LightGray" BorderThickness="1" Margin="5" Padding="10">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="120"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="150"/>
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
-                                       HorizontalAlignment="Center" FontWeight="Bold" FontSize="16" Margin="0,0,0,10">
-                                <Run Text="{Binding Manufacturer}"/>
-                                <Run Text=" | "/>
-                                <Run Text="{Binding Title}"/>
+                            <TextBlock Grid.ColumnSpan="3" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16" Margin="0,0,0,10">
+                                <Run Text="{Binding Manufacturer}"/><Run Text=" | "/><Run Text="{Binding Title}"/>
                             </TextBlock>
-
-                            <Image Grid.Row="1" Grid.Column="0" Source="{Binding DisplayImage}" 
-                                   Width="100" Height="100" Stretch="Uniform"/>
-
+                            <Image Grid.Row="1" Grid.Column="0" Source="{Binding DisplayImage}" Width="100" Height="100" Stretch="Uniform"/>
                             <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="15,0">
-                                <TextBlock Text="{Binding Category}" FontSize="14" Margin="0,2"/>
-                                <TextBlock Text="{Binding QuantityDisplay}" FontSize="14" Margin="0,2" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Composition}" FontSize="14" Margin="0,2" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Category}" FontSize="14"/>
+                                <TextBlock Text="{Binding QuantityDisplay}" FontSize="14" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Composition}" FontSize="14" TextWrapping="Wrap"/>
                             </StackPanel>
-
-                            <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" 
-                                       HorizontalAlignment="Right" FontSize="18" FontWeight="Bold"
-                                       Text="{Binding DiscountedPrice, Mode=OneWay, StringFormat='{}{0:N2} руб.'}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="18" FontWeight="Bold" Text="{Binding DiscountedPrice, StringFormat='{}{0:N2} руб.'}"/>
                         </Grid>
                     </Border>
                 </DataTemplate>

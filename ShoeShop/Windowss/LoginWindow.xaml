@@ -9,11 +9,9 @@
         Title="Авторизация - ОБУВАШКА" Height="250" Width="350" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
 
     <StackPanel Margin="20" VerticalAlignment="Center">
-        <TextBlock Text="Введите ваш логин:" FontSize="16" Margin="0,0,0,10"/>
+        <TextBlock Text="Логин:" FontSize="16" Margin="0,0,0,10"/>
         <TextBox x:Name="LoginTextBox" FontSize="16" Padding="5"/>
-        <TextBlock x:Name="ErrorText" Foreground="Red" FontSize="12" 
-                   Margin="0,5,0,10" Visibility="Collapsed" TextWrapping="Wrap"/>
-        <Button Content="Войти" FontSize="16" Padding="10" Margin="0,10,0,0" 
-                Click="LoginButton_Click"/>
+        <TextBlock x:Name="ErrorText" Foreground="Red" FontSize="12" Margin="0,5,0,10" Visibility="Collapsed"/>
+        <Button Content="Войти" FontSize="16" Padding="10" Margin="0,10,0,0" Click="LoginButton_Click"/>
     </StackPanel>
 </Window>

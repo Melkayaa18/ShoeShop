@@ -4,7 +4,7 @@ namespace ShoeShop
 {
     public partial class App : Application
     {
-        public int? CurrentUserId { get; set; }
-        public string CurrentUserFullName { get; set; }
+        public int? UserId { get; set; }
+        public string UserName { get; set; }
     }
 }

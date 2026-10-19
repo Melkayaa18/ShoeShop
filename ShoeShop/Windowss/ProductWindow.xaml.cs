@@ -20,216 +20,89 @@ namespace ShoeShop.Windowss
     /// </summary>
     public partial class ProductWindow : Window
     {
-        private readonly string _connectionString = @"Server=localhost;Database=ShoeShopDb;Trusted_Connection=True;TrustServerCertificate=True;";
-        private readonly int _productId;
-        public ProductWindow(int productId)
+        private readonly string conn = @"Server=localhost;Database=ShoeShopDb;Trusted_Connection=True;TrustServerCertificate=True;";
+        int productId;
+        public ProductWindow(int id)
         {
             InitializeComponent();
-            _productId = productId;
-            LoadProductDetails();
+            productId = id;
+            LoadData();
         }
-        private void LoadProductDetails()
+        private void LoadData()
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using var con = new SqlConnection(conn); con.Open();
+                // 1. Товар
+                using var cmd1 = new SqlCommand("SELECT p.Title, m.ManufacturerName, c.CategoryName, p.Price, p.Composition, p.ImageName, p.Description" +
+                    "FROM Products p LEFT JOIN Manufacturers m ON p.ManufacturerId = m.ManufacturerId" +
+                    "LEFT JOIN Categories c ON p.CategoryId = c.CategoryId WHERE p.ProductId = @Id", con);
+                cmd1.Parameters.AddWithValue("@Id", productId);
+                using var r1 = cmd1.ExecuteReader();
+                if (r1.Read())
                 {
-                    connection.Open();
-
-                    // Загружаем данные товара (все столбцы на английском)
-                    string productQuery = @"
-                        SELECT p.Title, m.ManufacturerName, c.CategoryName, 
-                               p.Price, p.Composition, p.ImageName, p.Description
-                        FROM Products p
-                        LEFT JOIN Manufacturers m ON p.ManufacturerId = m.ManufacturerId
-                        LEFT JOIN Categories c ON p.CategoryId = c.CategoryId
-                        WHERE p.ProductId = @ProductId";
-
-                    using (SqlCommand cmd = new SqlCommand(productQuery, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@ProductId", _productId);
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                TitleText.Text = reader["Title"].ToString();
-                                ManufacturerText.Text = "Производство: " + reader["ManufacturerName"];
-                                CategoryText.Text = "Категория: " + reader["CategoryName"];
-                                CompositionText.Text = reader["Composition"].ToString();
-                                DescriptionText.Text = reader["Description"] != DBNull.Value
-                                    ? reader["Description"].ToString() : "Нет описания";
-                                PriceText.Text = $"Цена: {Convert.ToDecimal(reader["Price"]):N2} руб.";
-
-                                string imgName = reader["ImageName"]?.ToString();
-                                if (!string.IsNullOrWhiteSpace(imgName))
-                                {
-                                    try
-                                    {
-                                        ProductImage.Source = new System.Windows.Media.Imaging.BitmapImage(
-                                            new Uri($"pack://application:,,,/Resources/{imgName}", UriKind.Absolute));
-                                    }
-                                    catch { /* Если картинка не найдена, просто не показываем */ }
-                                }
-                            }
-                        }
-                    }
-
-                    // Загружаем доступные размеры (SizeValue и Quantity — английские)
-                    string sizesQuery = @"
-                        SELECT s.StockItemId, sz.SizeValue, s.Quantity
-                        FROM StockItems s
-                        JOIN Sizes sz ON s.SizeId = sz.SizeId
-                        WHERE s.ProductId = @ProductId AND s.Quantity > 0
-                        ORDER BY sz.SizeValue";
-
-                    using (SqlCommand cmd = new SqlCommand(sizesQuery, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@ProductId", _productId);
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            var sizes = new List<SizeModel>();
-                            while (reader.Read())
-                            {
-                                sizes.Add(new SizeModel
-                                {
-                                    StockItemId = Convert.ToInt32(reader["StockItemId"]),
-                                    DisplaySize = $"Размер: {reader["SizeValue"]} (Доступно: {reader["Quantity"]} шт.)",
-                                    MaxQuantity = Convert.ToInt32(reader["Quantity"])
-                                });
-                            }
-                            SizeComboBox.ItemsSource = sizes;
-                        }
-                    }
+                    TitleText.Text = r1["Title"].ToString();
+                    ManufacturerText.Text = "Производство: " + r1["ManufacturerName"];
+                    CategoryText.Text = "Категория: " + r1["CategoryName"];
+                    CompositionText.Text = r1["Composition"].ToString();
+                    DescriptionText.Text = r1["Description"] != DBNull.Value ? r1["Description"].ToString() : "Нет";
+                    PriceText.Text = $"Цена: {Convert.ToDecimal(r1["Price"]):N2} руб.";
+                    string img = r1["ImageName"]?.ToString();
+                    if (!string.IsNullOrEmpty(img)) ProductImage.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri($"pack://application:,,,/Resources/{img}", UriKind.Absolute));
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки данных товара: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        // Разрешаем вводить только цифры в поле количества
-        // Разрешаем вводить только цифры
-        private void QuantityTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            e.Handled = !char.IsDigit(e.Text, e.Text.Length - 1);
-        }
 
-        private void QuantityTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
-        {
-            if (e.DataObject.GetDataPresent(typeof(string)))
-            {
-                string text = (string)e.DataObject.GetData(typeof(string));
-                foreach (char c in text)
-                    if (!char.IsDigit(c)) { e.CancelCommand(); return; }
+                // 2. Размеры
+                using var cmd2 = new SqlCommand("SELECT s.StockItemId, sz.SizeValue, s.Quantity FROM StockItems s JOIN Sizes sz" +
+                    "ON s.SizeId = sz.SizeId WHERE s.ProductId = @Id AND s.Quantity > 0", con);
+                cmd2.Parameters.AddWithValue("@Id", productId);
+                var sizes = new List<SizeModel>();
+                using var r2 = cmd2.ExecuteReader();
+                while (r2.Read()) sizes.Add(new SizeModel { StockItemId = Convert.ToInt32(r2["StockItemId"]), DisplaySize = $"Размер: {r2["SizeValue"]} (Доступно: {r2["Quantity"]})", MaxQuantity = Convert.ToInt32(r2["Quantity"]) });
+                SizeComboBox.ItemsSource = sizes;
             }
-            else
-            {
-                e.CancelCommand();
-            }
+            catch (Exception ex) { MessageBox.Show("Ошибка: " + ex.Message); }
         }
-        
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void QuantityTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e) => e.Handled = !char.IsDigit(e.Text, e.Text.Length - 1);
+        private void CancelButton_Click(object sender, RoutedEventArgs e) => this.Close();
 
         private void OrderButton_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Валидация ввода
-            if (SizeComboBox.SelectedItem == null)
-            {
-                MessageBox.Show("Пожалуйста, выберите размер обуви из списка.",
-                    "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!int.TryParse(QuantityTextBox.Text, out int quantity) || quantity <= 0)
-            {
-                MessageBox.Show("Количество должно быть целым числом больше нуля.",
-                    "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            var selectedSize = (SizeModel)SizeComboBox.SelectedItem;
-            if (quantity > selectedSize.MaxQuantity)
-            {
-                MessageBox.Show($"Недостаточно товара на складе. Доступно только: {selectedSize.MaxQuantity} шт.",
-                    "Ошибка количества", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (SizeComboBox.SelectedItem is not SizeModel size) {MessageBox.Show("Выберите размер", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
+            if (!int.TryParse(QuantityTextBox.Text, out int qty) || qty <= 0) { MessageBox.Show("Неверное количество", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
+            if (qty > size.MaxQuantity) { MessageBox.Show($"Доступно только: {size.MaxQuantity}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
 
             var app = (App)Application.Current;
-            if (app.CurrentUserId == null)
-            {
-                MessageBox.Show("Ошибка авторизации. Войдите в систему заново.",
-                    "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            // Оформление заказа в транзакции
+            if (app.UserId == null) return;
+
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using var con = new SqlConnection(conn); con.Open();
+                using var tran = con.BeginTransaction();
+                try
                 {
-                    connection.Open();
-                    SqlTransaction transaction = connection.BeginTransaction();
+                    using var cmd1 = new SqlCommand("INSERT INTO Orders (UserId, OrderDate) OUTPUT INSERTED.OrderId VALUES (@UserId, GETDATE())", con, tran);
+                    cmd1.Parameters.AddWithValue("@UserId", app.UserId);
+                    int orderId = (int)cmd1.ExecuteScalar();
 
-                    try
-                    {
-                        // Создаём заказ
-                        string insertOrder = "INSERT INTO Orders (UserId, OrderDate) OUTPUT INSERTED.OrderId VALUES (@UserId, GETDATE())";
-                        int orderId;
-                        using (SqlCommand cmd = new SqlCommand(insertOrder, connection, transaction))
-                        {
-                            cmd.Parameters.AddWithValue("@UserId", app.CurrentUserId.Value);
-                            orderId = (int)cmd.ExecuteScalar();
-                        }
+                    using var cmd2 = new SqlCommand("INSERT INTO OrderItems (OrderId, StockItemId, Quantity) VALUES (@OrderId, @StockItemId, @Quantity)", con, tran);
+                    cmd2.Parameters.AddWithValue("@OrderId", orderId);
+                    cmd2.Parameters.AddWithValue("@StockItemId", size.StockItemId);
+                    cmd2.Parameters.AddWithValue("@Quantity", qty);
+                    cmd2.ExecuteNonQuery();
 
-                        // Добавляем позицию в заказ
-                        string insertItem = "INSERT INTO OrderItems (OrderId, StockItemId, Quantity) VALUES (@OrderId, @StockItemId, @Quantity)";
-                        using (SqlCommand cmd = new SqlCommand(insertItem, connection, transaction))
-                        {
-                            cmd.Parameters.AddWithValue("@OrderId", orderId);
-                            cmd.Parameters.AddWithValue("@StockItemId", selectedSize.StockItemId);
-                            cmd.Parameters.AddWithValue("@Quantity", quantity);
-                            cmd.ExecuteNonQuery();
-                        }
+                    using var cmd3 = new SqlCommand("UPDATE StockItems SET Quantity = Quantity - @Quantity WHERE StockItemId = @StockItemId", con, tran);
+                    cmd3.Parameters.AddWithValue("@Quantity", qty);
+                    cmd3.Parameters.AddWithValue("@StockItemId", size.StockItemId);
+                    cmd3.ExecuteNonQuery();
 
-                        // Уменьшаем остаток на складе
-                        string updateStock = "UPDATE StockItems SET Quantity = Quantity - @Quantity WHERE StockItemId = @StockItemId";
-                        using (SqlCommand cmd = new SqlCommand(updateStock, connection, transaction))
-                        {
-                            cmd.Parameters.AddWithValue("@Quantity", quantity);
-                            cmd.Parameters.AddWithValue("@StockItemId", selectedSize.StockItemId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        transaction.Commit();
-                        MessageBox.Show("Заказ успешно оформлен! Спасибо за покупку.",
-                            "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-                        this.Close();
-                    }
-                    catch
-                    {
-                        transaction.Rollback();
-                        throw;
-                    }
+                    tran.Commit();
+                    MessageBox.Show("Заказ оформлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    this.Close();
                 }
+                catch { tran.Rollback(); throw; }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Не удалось оформить заказ: {ex.Message}",
-                    "Ошибка базы данных", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
     }
-
-    // Вспомогательный класс для ComboBox размеров
-    public class SizeModel
-    {
-        public int StockItemId { get; set; }
-        public string DisplaySize { get; set; }
-        public int MaxQuantity { get; set; }
-    }
+    public class SizeModel { public int StockItemId { get; set; } public string DisplaySize { get; set; } public int MaxQuantity { get; set; } }
 }
